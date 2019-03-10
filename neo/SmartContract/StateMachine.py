@@ -1,4 +1,5 @@
 import sys
+import binascii
 from neo.Core.State.ContractState import ContractState
 from neo.Core.State.AssetState import AssetState
 from neo.Core.Blockchain import Blockchain
@@ -392,16 +393,8 @@ class StateMachine(StateReader):
         storage_key = StorageKey(script_hash=context.ScriptHash, key=key)
         item = self._storages.ReplaceOrAdd(storage_key.ToArray(), new_item)
 
-        keystr = key
-        valStr = bytearray(item.Value)
-
-        if len(key) == 20:
-            keystr = Crypto.ToAddress(UInt160(data=key))
-
-            try:
-                valStr = int.from_bytes(valStr, 'little')
-            except Exception as e:
-                pass
+        keystr = binascii.hexlify(key)
+        valStr = binascii.hexlify(bytearray(item.Value))
 
         self.events_to_dispatch.append(
             SmartContractEvent(SmartContractEvent.STORAGE_PUT, ContractParameter(ContractParameterType.String, '%s -> %s' % (keystr, valStr)),
@@ -422,9 +415,7 @@ class StateMachine(StateReader):
 
         storage_key = StorageKey(script_hash=context.ScriptHash, key=key)
 
-        keystr = key
-        if len(key) == 20:
-            keystr = Crypto.ToAddress(UInt160(data=key))
+        keystr = binascii.hexlify(key)
 
         self.events_to_dispatch.append(SmartContractEvent(SmartContractEvent.STORAGE_DELETE, ContractParameter(ContractParameterType.String, keystr),
                                                           context.ScriptHash, Blockchain.Default().Height + 1,
